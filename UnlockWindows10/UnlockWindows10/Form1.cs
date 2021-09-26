@@ -15,11 +15,17 @@ namespace UnlockWindows10
         public windowForm()
         {
             InitializeComponent();
+
+            statusText.Text = "Loading...";
+            statusText.ForeColor = Color.Cyan;
+
+            Task task = new Task(CheckWindowsActivatedState);
+            task.Start();
+
             dropDown.SelectedIndex = 0;
-            nameLabel.Text = Environment.UserName;
+            nameLabel.Text = Environment.MachineName;
             userImage.Image = GetUserImage();
             infomationText.Visible = false;
-            UpdateStatusText();
         }
 
         #region Moving Bar
@@ -82,7 +88,12 @@ namespace UnlockWindows10
             infomationText.Visible = true;
             infomationText.Text = "The process take seconds";
 
-            UpdateStatusText();
+            Task task = new Task(CheckWindowsActivatedState);
+            task.Start();
+
+            statusText.Text = "Updating...";
+            statusText.ForeColor = Color.Cyan;
+
             await Task.Delay(2000);
             infomationText.Visible = false;
 
@@ -93,13 +104,6 @@ namespace UnlockWindows10
 
             await Task.Delay(1500);
             infomationText.Visible = false;
-        }
-
-        private void UpdateStatusText()
-        {
-            bool status = IsWindowsActivated();
-            statusText.Text = status ? "Activated" : "Not Activated";
-            statusText.ForeColor = status ? Color.Green : Color.Red;
         }
 
         #region Get Windows Image
@@ -127,26 +131,37 @@ namespace UnlockWindows10
         #endregion
 
         #region Get Windows License Status
-        //Code : https://stackoverflow.com/questions/39231105/how-to-check-windows-license-status-in-c
-        public static bool IsWindowsActivated()
+
+        private async void CheckWindowsActivatedState()
         {
-            //Get the largest scope to search 
-            ManagementScope scope = new ManagementScope(@"\\" + Environment.MachineName + @"\root\cimv2");
-            scope.Connect();
+            //Solution : https://stackoverflow.com/questions/39231105/how-to-check-windows-license-status-in-c
 
-            SelectQuery searchQuery = new SelectQuery("SELECT * FROM SoftwareLicensingProduct WHERE ApplicationID = '55c92734-d682-4d71-983e-d6ec3f16059f' and LicenseStatus = 1");
-            ManagementObjectSearcher searcherObj = new ManagementObjectSearcher(scope, searchQuery);
-            //ManagementObjectSearcher xd = new ManagementObjectSearcher();
-
-            using (ManagementObjectCollection obj = searcherObj.Get())
+            await Task.Run(() =>
             {
-                return obj.Count > 0;
-            }
+                //Get the largest scope to search 
+                ManagementScope scope = new ManagementScope(@"\\" + Environment.MachineName + @"\root\cimv2");
+                scope.Connect();
+
+                SelectQuery searchQuery = new SelectQuery("SELECT * FROM SoftwareLicensingProduct WHERE ApplicationID = '55c92734-d682-4d71-983e-d6ec3f16059f' and LicenseStatus = 1");
+                ManagementObjectSearcher searcherObj = new ManagementObjectSearcher(scope, searchQuery);
+
+                using (ManagementObjectCollection obj = searcherObj.Get())
+                {
+                    bool windowsActivated =  obj.Count > 0;
+                    Invoke((MethodInvoker)delegate {
+                        statusText.Text = windowsActivated ? "Activated" : "Not Activated";
+                        statusText.ForeColor = windowsActivated ? Color.Green : Color.Red;
+                    });
+                }
+            });
         }
+
         #endregion
 
         private void closeButton_Click(object sender, EventArgs e)
         {
+            //Force the software shutdown and prevent any running thread issues
+            Process.GetCurrentProcess().Kill();
             Application.Exit();
         }
     }

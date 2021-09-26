@@ -149,11 +149,11 @@
             // statusText
             // 
             this.statusText.AutoSize = true;
-            this.statusText.Font = new System.Drawing.Font("Miriam CLM", 10F, System.Drawing.FontStyle.Bold);
+            this.statusText.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
             this.statusText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(188)))), ((int)(((byte)(195)))), ((int)(((byte)(201)))));
             this.statusText.Location = new System.Drawing.Point(37, 220);
             this.statusText.Name = "statusText";
-            this.statusText.Size = new System.Drawing.Size(48, 16);
+            this.statusText.Size = new System.Drawing.Size(54, 17);
             this.statusText.TabIndex = 8;
             this.statusText.Text = "Status";
             // 
